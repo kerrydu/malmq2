@@ -7,5 +7,5 @@
 ## Install with Stata Command
  
  ```
- net install ddfeff, from("https://raw.githubusercontent.com/kerrydu/malmq2/master/")
+ net install malmq2, from("https://raw.githubusercontent.com/kerrydu/malmq2/master/")
  ```
