@@ -35,8 +35,8 @@
 {synopt:{opt vrs}}specifies decomposing TFP under the production technology with variable returns to scale. By default, production technology with constant returns to scale is assumed.
 {p_end}
 
-{synopt:{opt ort(string)}}specifies the oriention. The default is ort(out), 
-meaning the input oriented productivity index. ort(i) means the input oriented productivity index.
+{synopt:{opt ort(string)}}specifies the oriention. The default is ort(i), 
+meaning the input oriented productivity index. ort(out) means the output oriented productivity index.
 {p_end}
 
 {synopt:{opt sav:ing(filename[,replace])}}specifies that the results be saved in {it:filename}.dta. 
