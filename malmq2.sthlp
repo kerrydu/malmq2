@@ -32,7 +32,10 @@
 {synopt:{opt global}}specifies global production technology.
 {p_end}
 
-{synopt:{opt vrs}}specifies decomposing TFP under the production technology with variable returns to scale. By default, production technology with constant returns to scale is assumed.
+{synopt:{opt fngz}}specifies decomposing TFP change using the FNGZ's (1994) method.
+{p_end}
+
+{synopt:{opt rd}}specifies decomposing TFP change using the RD's (1997) method.
 {p_end}
 
 {synopt:{opt ort(string)}}specifies the oriention. The default is ort(i), 
@@ -57,13 +60,6 @@ meaning the input oriented productivity index. ort(out) means the output oriente
 {pstd}
 {cmd:malmq2} selects the input and output variables in the opened data set and estimate Malmquist Productivity Index using Data Envelopment Analysis(DEA) frontier by options specified. 
 
-{phang}
-The malmq2 program requires initial data set that contains the input and output variables for observed units. 
-
-{phang}
-Variable names must be identified by inputvars for input variable, by outputvars for output variable 
- to allow that {cmd:malmq2} program can identify and handle the multiple input-output data set.
-
 
 
 {title:Examples}
@@ -72,9 +68,9 @@ Variable names must be identified by inputvars for input variable, by outputvars
 
 {phang}{cmd:. malmq2 K L= Y, id( dmu ) time(year) global}
 
-{phang}{cmd:. malmq2 K L= Y, id( dmu ) time(year) seq ort(o)}
+{phang}{cmd:. malmq2 K L= Y, id( dmu ) time(year) seq ort(o) fgnz}
 
-{phang}{cmd:. malmq2 K L= Y, id( dmu ) time(year) ort(o) sav(tfp_result,replace)}
+{phang}{cmd:. malmq2 K L= Y, id( dmu ) time(year) ort(o) rd sav(tfp_result,replace)}
 
 {title:Saved Results}
 
@@ -84,6 +80,25 @@ Macro:
 {psee}
 {cmd: r(file)} the filename stores results of {cmd:malmq2}.
 {p_end}
+
+
+{marker references}{...}
+{title:References}
+ 
+{phang}
+Färe, R., Grosskopf, S., Norris, M., & Zhang, Z. (1994). Productivity Growth, Technical Progress, and Efficiency Change in Industrialized Countries. The American Economic Review, 84(1), 66-83.
+
+{phang}
+Ray, S., & Desli, E. (1997). Productivity Growth, Technical Progress, and Efficiency Change in Industrialized Countries: Comment. The American Economic Review, 87(5), 1033-1039.
+
+{phang}
+Pastor, J., Lovell, C. (2005). A global Malmquist productivity index, Economics Letters, 88(2):266-271.
+
+{phang} 
+Ji, Y., Lee, C. (2010). Data Envelopment Analysis. Stata Journal 10: 267-280.
+
+{phang}
+Lee, K., Lee,B., Lee, C., Lee, C. (2011). Malmquist Productivity Index using DEA frontier in Stata. Working paper.
 
 
 

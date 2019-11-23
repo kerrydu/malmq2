@@ -1,11 +1,145 @@
-*! version 1.0
+*! version 2.0
 * Kerry Du (kerrydu@xmu.edu.cn)
 * 22 Nov 2019
 capture program drop malmq2
 program define malmq2,rclass
     version 16
 	
-local subcmd `0'
+*******************************************************************************
+/////////This section is from  Yong-bae Ji and Choonjoo Lee's DEA.ado//////////
+    // get and check invarnames
+    gettoken word 0 : 0, parse("=,")
+    while ~("`word'" == ":" | "`word'" == "=") {
+        if "`word'" == "," | "`word'" == "" {
+                error 198
+        }
+        local invars `invars' `word'
+        gettoken word 0 : 0, parse("=,")
+    }
+    unab invars : `invars'
+*********************************************************************************	
+	
+    syntax varlist [if] [in], id(varname) time(varname) [FGNZ RD ort(string) ///
+	                           GLOBAL SEQuential WINdow(numlist intege max=1 >=1) ///
+							   saving(string) maxiter(numlist integer >0 max=1) tol(numlist max=1 >0)]
+							   
+							   
+	if "`fgnz'"!=""&"`rd'"!=""{
+	    disp as error "fgnz and rd cannot be specified together."
+		error 498
+	}
+	preserve
+	marksample touse 
+    local opvars `varlist'
+	qui keep `invars' `opvars' `id' `time' `touse'
+	qui gen Row=_n
+	label var Row "Row # in the original dataset"
+	
+	qui cap bys `id' (`time'): gen Pdwise=`time'[_n-1]+"~"+`time' if _n>1
+	qui cap bys `id' (`time'): gen Pdwise=string(`time'[_n-1])+"~"+string(`time') if _n>1
+	label var Pdwise "Period wise"
+	
+	_malmq `invars'=`opvars' if `touse', id(`id') time(`time') ort(`ort') `global' `sequential' ///
+	                                     window(`window')  maxiter(`maxiter') tol(`tol')
+							   
+	local resvars `r(rvars)'
+	
+	if  "`fgnz'"==""&"`rd'"==""{
+	
+	    format `resvars' %9.4f
+		order Row `id' Pdwise  `resvars' 
+		//keep  Row `id' Pdwise  `resvars' `touse'
+	
+		disp _n(2) " Malmquist Productivity Index Results:"
+		disp "    (Row: Row # in the original data; Pdwise: periodwise)"
+
+		list Row `id'  Pdwise  `resvars' if !missing(Pdwise) & `touse', sep(0) 
+		di "Note: missing value indicates infeasible problem."
+
+		if `"`saving'"'!=""{
+		  save `saving'
+		  gettoken filenames saving:saving, parse(",")
+		  local filenames `filenames'.dta
+		  disp _n `"Estimated Results are saved in `filenames'."'
+		}	
+		
+
+	    return local file `filenames'
+	    restore	
+		
+	}
+	else{
+		
+		foreach v of local resvars{
+		
+			rename `v' `v'_crs
+		
+		}
+		
+	   _malmq `invars'=`opvars' if `touse', vrs id(`id') time(`time') ort(`ort') `global' `sequential' ///
+	                                        window(`window')  maxiter(`maxiter') tol(`tol')		
+		
+		if "`rd'"!=""{
+		
+			qui gen SECH=TFPCH_crs/TFPCH
+			label var SECH "Scale efficiecny change"
+			qui replace TFPCH=TFPCH_crs
+			local resvars `resvars' SECH
+		
+		}
+		else{
+			qui gen SECH=TECH_crs/TECH
+			label var SECH "Scale efficiecny change"			
+			qui replace TFPCH=TFPCH_crs
+			if "`global'"!=""{
+				qui replace BPC=BPC_crs
+			}
+			else{
+				qui replace TECCH=TECCH_crs		
+			}
+
+			local resvars `resvars' SECH
+		}
+		
+		
+	    format `resvars' %9.4f
+		order Row `id' Pdwise  `resvars' 
+		//keep  Row `id' Pdwise  `resvars' `touse'
+	
+		disp _n(2) " Malmquist Productivity Index Results:"
+		disp "    (Row: Row # in the original data; Pdwise: periodwise)"
+
+		list Row `id'  Pdwise  `resvars' if !missing(Pdwise) & `touse', sep(0) 
+		di "Note: missing value indicates infeasible problem."
+
+		if `"`saving'"'!=""{
+		  save `saving'
+		  gettoken filenames saving:saving, parse(",")
+		  local filenames `filenames'.dta
+		  disp _n `"Estimated Results are saved in `filenames'."'
+		}	
+		
+
+	    return local file `filenames'
+	    restore			
+		
+
+	
+	
+	}
+	
+	
+end	
+	
+	
+	
+
+**************************************************
+capture program drop _malmq
+program define _malmq,rclass
+    version 16
+	
+
 *******************************************************************************
 /////////This section is from  Yong-bae Ji and Choonjoo Lee's DEA.ado//////////
     // get and check invarnames
@@ -23,8 +157,8 @@ local subcmd `0'
     local num: word count `invars'
     syntax varlist [if] [in], id(varname) time(varname) [VRS ort(string) ///
 	                           GLOBAL SEQuential WINdow(numlist intege max=1 >=1) ///
-							   save(string) maxiter(numlist integer >0 max=1) tol(numlist max=1 >0)]
-	preserve
+							   maxiter(numlist integer >0 max=1) tol(numlist max=1 >0)]
+							   
 	marksample touse 
     local opvars `varlist'
 	
@@ -81,9 +215,6 @@ local subcmd `0'
 		local tol=-1
 	}	
 	
-	keep `invars' `opvars' `id' `time' `touse'
-	qui gen Row=_n
-	label var Row "Row # in the original dataset"
    
     tempvar period dmu
 	
@@ -102,7 +233,7 @@ local subcmd `0'
 	
     qui gen `flag'=0
 	
-  sort `period' `dmu'
+	sort `period' `dmu'
 	
   if `"`techtype'"'=="contemporaneous"{
   
@@ -203,8 +334,6 @@ local subcmd `0'
 	    qui replace `flag'=1
 		shepdf  if `touse', rflag(`flag') gen(`temp') `vrs' ort(`ort') in(`invars') op(`opvars') maxiter(`maxiter') tol(`tol')
         
-		qui cap bys `dmu' (`period'): gen Pdwise=`time'[_n-1]+"~"+`time' if _n>1
-		qui cap bys `dmu' (`period'): gen Pdwise=string(`time'[_n-1])+"~"+string(`time') if _n>1
         qui bys `dmu' (`period'): gen TFPCH=`temp'/`temp'[_n-1]	
 		label var TFPCH "Total factor productivity change"
 		cap drop `temp'		
@@ -223,25 +352,12 @@ local subcmd `0'
 		label var TECH  "Technical efficiency change"	
 		label var BPC "Best practice gap change"
 		local resvars TFPCH TECH  BPC
-		/*
-		if "`vrs'"!=""{
-			qui replace `flag'=1
-			shepdf  if `touse', rflag(`flag') gen(`temp')  ort(`ort') in(`invars') op(`opvars') maxiter(`maxiter') tol(`tol')	
-			qui by `dmu' (`period'): replace `DD'=`temp'/`temp'[_n-1]
-			qui gen SECH=`DD'/TFPCH
-			qui replace TFPCH=`DD'
-			label var SECH "Scale efficiency change"
-			local resvars TFPCH TECH  BPC SECH
-		}
-		*/
 		
 		
 	}
 	else{
 		qui {
 			sort `dmu' `period'
-			cap bys `dmu' (`period'): gen Pdwise=`time'[_n-1]+"~"+`time' if _n>1
-			cap bys `dmu' (`period'): gen Pdwise=string(`time'[_n-1])+"~"+string(`time') if _n>1
 			bys `dmu' (`period'): gen TECH=`DD'/`DD'[_n-1]
 			bys `dmu' (`period'): gen TECCH=sqrt(`D12'/`DD'*`DD'[_n-1]/`D21'[_n-1])
 			gen TFPCH= TECH*TECCH
@@ -253,264 +369,18 @@ local subcmd `0'
 	
 	}
 	
+	return local rvars "`resvars'"
 	
-	if "`vrs'"!=""{
-	  tempvar DD
-	  malmq2_1 `subcmd' tfp(`DD')
-	  qui gen SECH=`DD'/TFPCH
-	  qui replace TFPCH=`DD'
-	  label var SECH "Scale efficiecny change"
-	  local resvars `resvars' SECH
-	
-	}
-	
-	
-	
-	
-	label var Pdwise "Period wise"
-	
-
-	    format `resvars' %9.4f
-		order Row `id' `time' Pdwise  `resvars' 
-		keep  Row `id' `time' Pdwise  `resvars' `touse'
-	
-		disp _n(2) " Malmquist Productivity Index Results:"
-		disp "    (Row: Row # in the original data; Pdwise: periodwise)"
-
-		list Row `id' `time' Pdwise  `resvars' if !missing(Pdwise) & `touse', sep(0) 
-		di "Note: missing value indicates infeasible problem."
-
-	if `"`saving'"'!=""{
-	  save `saving'
-	  gettoken filenames saving:saving, parse(",")
-	  local filenames `filenames'.dta
-	  disp _n `"Estimated Results are saved in `filenames'."'
-	}	
-	
-
-   return local file `filenames'
-   restore
-
 
 
 end  
 
 
-capture program drop malmq2_1
-program define malmq2_1
-    version 16
-*******************************************************************************
-/////////This section is from  Yong-bae Ji and Choonjoo Lee's DEA.ado//////////
-    // get and check invarnames
-    gettoken word 0 : 0, parse("=,")
-    while ~("`word'" == ":" | "`word'" == "=") {
-        if "`word'" == "," | "`word'" == "" {
-                error 198
-        }
-        local invars `invars' `word'
-        gettoken word 0 : 0, parse("=,")
-    }
-    unab invars : `invars'
-*********************************************************************************	
-	
-    local num: word count `invars'
-    syntax varlist [if] [in], id(varname) time(varname) tfp(string) [VRS ort(string) ///
-	                           GLOBAL SEQuential WINdow(numlist intege max=1 >=1) ///
-							   save(string) maxiter(numlist integer >0 max=1) tol(numlist max=1 >0)]
-	
-	marksample touse 
-    local opvars `varlist'
-	
-	
-	
-	local techtype "contemporaneous"
-   
-
-   if "`global'"!=""{
-	   if "`sequential'"!=""{
-	   
-		   disp as error "global and sequential cannot be specified together."
-		   error 498	   
-	   
-	   }
-	   
-	   if "`window'"!=""{
-	   
-		   disp as error "global and window() cannot be specified together."
-		   error 498	   
-	   
-	   }	   
-	   
-	   local techtype "global"
-	
-	}	
-	
-   
-
-   if "`sequential'"!=""{
- 
-	   if "`window'"!=""{
-	   
-		   disp as error "sequential and window() cannot be specified together."
-		   error 498	   
-	   
-	   }	   
-	   
-	   local techtype "sequential"
-	
-	}	
-		
- 
-	   if "`window'"!=""{
-	   
-	       local techtype "window"   
-	   
-	   }	   
-	   
-	if "`maxiter'"==""{
-		local maxiter=-1
-	}
-	if "`tol'"==""{
-		local tol=-1
-	}	
-	
-	
-    tempvar period dmu
-	
-	qui egen `period'=group(`time')
-	qui egen `dmu'=group(`id')	
-
-	
-    qui su  `period'
-    local tmax=r(max)
-
-    tempvar flag temp DD D21 D12
-    
-    qui gen `DD'=.
-    qui gen `D21'=.
-    qui gen `D12'=.
-	
-    qui gen `flag'=0
-	
-  sort `period' `dmu'
-	
-  if `"`techtype'"'=="contemporaneous"{
-  
-	    qui{
-        forv t=1/`tmax'{
-            replace `flag'= (`period'==`t')
-            shepdf  if `period'==`t' & `touse', rflag(`flag') gen(`temp')  ort(`ort') in(`invars') op(`opvars') maxiter(`maxiter') tol(`tol')
-            replace `DD'=`temp' if `period'==`t'
-            drop `temp'
-        }    
-        local tt=`tmax'-1
-        forv t=1/`tt'{
-            replace `flag'=(`period'==`t'+1) 
-            shepdf  if `period'==`t' & `touse', rflag(`flag') gen(`temp')  ort(`ort') in(`invars') op(`opvars') maxiter(`maxiter') tol(`tol')
-            replace `D21'=`temp' if `period'==`t'
-            drop `temp'
-        }  
-
-        forv t=2/`tmax'{
-            replace `flag'=(`period'==`t'-1)
-            shepdf  if `period'==`t' & `touse', rflag(`flag') gen(`temp')  ort(`ort') in(`invars') op(`opvars') maxiter(`maxiter') tol(`tol')
-            replace `D12'=`temp' if `period'==`t'
-            drop `temp'
-        }       
-
-    }
-  
-  
-  }
-  
-  
-    if `"`techtype'"'=="sequential"{
-  
-	    qui {
-        forv t=1/`tmax'{
-            replace `flag'=(`period'<=`t')
-            shepdf if `period'==`t' & `touse', rflag(`flag') gen(`temp')  ort(`ort') in(`invars') op(`opvars') maxiter(`maxiter') tol(`tol')
-            replace `DD'=`temp' if `period'==`t'
-            replace `flag'=0
-            drop `temp'
-        }    
-        local tt=`tmax'-1
-        forv t=1/`tt'{
-            replace `flag'=(`period'<=`t'+1) 
-            shepdf  if `period'==`t' & `touse', rflag(`flag') gen(`temp')  ort(`ort') in(`invars') op(`opvars') maxiter(`maxiter') tol(`tol')
-            replace `D21'=`temp' if `period'==`t'
-            drop `temp'
-        }  
-
-        forv t=2/`tmax'{
-            replace `flag'= (`period'<=`t'-1) 
-            shepdf if `period'==`t' & `touse', rflag(`flag') gen(`temp')  ort(`ort') in(`invars') op(`opvars') maxiter(`maxiter') tol(`tol')
-            replace `D12'=`temp' if `period'==`t'
-            drop `temp'
-        }       
-
-    }
-  
-  
-  }
-  
-  
-  
-     if `"`techtype'"'=="window"{
-		local band=(`window'-1)/2
-	    qui{
-        forv t=1/`tmax'{
-            replace `flag'=(`period'<=`t'+`band' & `period'>=`t'-`band') 
-            shepdf  if `period'==`t' & `touse', rflag(`flag') gen(`temp')  ort(`ort') in(`invars') op(`opvars') maxiter(`maxiter') tol(`tol')
-            replace `DD'=`temp' if `period'==`t'
-            drop `temp'
-        }    
-        local tt=`tmax'-1
-        forv t=1/`tt'{
-            replace `flag'= (`period'<=`t'+1+`band' &  `period'>=`t'-`band'+1)
-            shepdf  if `period'==`t' & `touse', rflag(`flag') gen(`temp')  ort(`ort') in(`invars') op(`opvars') maxiter(`maxiter') tol(`tol')
-            replace `D21'=`temp' if `period'==`t'
-            drop `temp'
-        }  
-
-        forv t=2/`tmax'{
-            replace `flag'=(`period'<=`t'-1+`band' & `period'>=`t'-1-`band') 
-            shepdf  if `period'==`t' & `touse', rflag(`flag') gen(`temp')  ort(`ort') in(`invars') op(`opvars') maxiter(`maxiter') tol(`tol')
-            replace `D12'=`temp' if `period'==`t'
-            drop `temp'
-        }       
-
-    }
-  
-  
-  }
- 
-
- 	
- 
-	if `"`techtype'"'=="global"{
-
-	    qui replace `flag'=1
-		shepdf  if `touse', rflag(`flag') gen(`temp')  ort(`ort') in(`invars') op(`opvars') maxiter(`maxiter') tol(`tol')
-        qui bys `dmu' (`period'): gen `tfp'=`temp'/`temp'[_n-1]	
-		
-		
-	}
-	else{
-		qui {
-			bys `dmu' (`period'): gen `tfp'=sqrt(`D12'/`DD'[_n-1]*`DD'/`D21'[_n-1])				
-		}	
-	
-	}
-	
 
 
 
 
-end 
-
-
-
+**************************************************
 capture program drop shepdf
 program define shepdf
     version 16
@@ -589,7 +459,6 @@ mata:
 						real scalar  maxiter, ///
 						real scalar  tol)
     { 
-
           data=st_data(.,d,touse)
           data=data'
           dataref=st_data(.,d,rflag)
@@ -633,12 +502,10 @@ mata:
               q.setBounds(lowerbd, upperbd)
               theta[j]=q.optimize()		  
          }
-
           st_view(gen=.,.,g,touse)
           gen[.,.]=theta
     
     }
-
 end
 
 
@@ -653,7 +520,6 @@ void function sdf_i(string scalar d, ///
 					real scalar  maxiter, ///
 				    real scalar  tol)
     { 
-
           data=st_data(.,d,touse)
           data=data'
           dataref=st_data(.,d,rflag)
@@ -695,20 +561,11 @@ void function sdf_i(string scalar d, ///
               q.setBounds(lowerbd, upperbd)
               theta[j]=q.optimize()		  
          }
-
           st_view(gen=.,.,g,touse)
           gen[.,.]=theta
     
     }
-
 end
-
-
-
-
-
-
-
 
 
 
