@@ -1,6 +1,6 @@
-*! version 2.0
+*! version 2.1
 * Kerry Du (kerrydu@xmu.edu.cn)
-* 22 Nov 2019
+* 23 Nov 2019
 capture program drop malmq2
 program define malmq2,rclass
     version 16
@@ -21,7 +21,7 @@ program define malmq2,rclass
 	
     syntax varlist [if] [in], id(varname) time(varname) [FGNZ RD ort(string) ///
 	                           GLOBAL SEQuential WINdow(numlist intege max=1 >=1) ///
-							   saving(string) maxiter(numlist integer >0 max=1) tol(numlist max=1 >0)]
+							   SAVing(string) maxiter(numlist integer >0 max=1) tol(numlist max=1 >0)]
 							   
 							   
 	if "`fgnz'"!=""&"`rd'"!=""{
@@ -48,12 +48,13 @@ program define malmq2,rclass
 	
 	    format `resvars' %9.4f
 		order Row `id' Pdwise  `resvars' 
-		//keep  Row `id' Pdwise  `resvars' `touse'
+		keep if !missing(Pdwise) & `touse'
+		keep  Row `id' Pdwise  `resvars' 
 	
 		disp _n(2) " Malmquist Productivity Index Results:"
 		disp "    (Row: Row # in the original data; Pdwise: periodwise)"
 
-		list Row `id'  Pdwise  `resvars' if !missing(Pdwise) & `touse', sep(0) 
+		list Row `id'  Pdwise  `resvars', sep(0) 
 		di "Note: missing value indicates infeasible problem."
 
 		if `"`saving'"'!=""{
@@ -104,12 +105,13 @@ program define malmq2,rclass
 		
 	    format `resvars' %9.4f
 		order Row `id' Pdwise  `resvars' 
-		//keep  Row `id' Pdwise  `resvars' `touse'
+		keep if !missing(Pdwise) & `touse'
+		keep  Row `id' Pdwise  `resvars' 
 	
 		disp _n(2) " Malmquist Productivity Index Results:"
 		disp "    (Row: Row # in the original data; Pdwise: periodwise)"
 
-		list Row `id'  Pdwise  `resvars' if !missing(Pdwise) & `touse', sep(0) 
+		list Row `id'  Pdwise  `resvars' , sep(0) 
 		di "Note: missing value indicates infeasible problem."
 
 		if `"`saving'"'!=""{
@@ -356,6 +358,8 @@ program define _malmq,rclass
 		
 	}
 	else{
+	
+			//su `DD' `D12' `D21'
 		qui {
 			sort `dmu' `period'
 			bys `dmu' (`period'): gen TECH=`DD'/`DD'[_n-1]

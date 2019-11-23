@@ -6,7 +6,7 @@
 {title:Title}
 
 {phang}
-{bf:malmq2} {hline 2} Malmquist Productivity index in Stata 
+{bf:malmq2} {hline 2} Malmquist Productivity Index in Stata 
 
 {title:Syntax}
 
@@ -32,7 +32,7 @@
 {synopt:{opt global}}specifies global production technology.
 {p_end}
 
-{synopt:{opt fngz}}specifies decomposing TFP change using the FNGZ's (1994) method.
+{synopt:{opt fgnz}}specifies decomposing TFP change using the FGNZ's (1994) method.
 {p_end}
 
 {synopt:{opt rd}}specifies decomposing TFP change using the RD's (1997) method.
@@ -64,7 +64,7 @@ meaning the input oriented productivity index. ort(out) means the output oriente
 
 {title:Examples}
 
-{phang}{"use ...\example_ddf.dta"}
+{phang}{"use ...\exdata.dta"}
 
 {phang}{cmd:. malmq2 K L= Y, id( dmu ) time(year) global}
 
