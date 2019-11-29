@@ -1,9 +1,13 @@
 *! version 2.1
 * Kerry Du (kerrydu@xmu.edu.cn)
-* 23 Nov 2019
+* 29 Nov 2019
 capture program drop malmq2
-program define malmq2,rclass
+program define malmq2,rclass prop(xt)
     version 16
+
+	_xt, trequired 
+	local id=r(ivar)
+	local time=r(tvar)
 	
 *******************************************************************************
 /////////This section is from  Yong-bae Ji and Choonjoo Lee's DEA.ado//////////
@@ -19,7 +23,7 @@ program define malmq2,rclass
     unab invars : `invars'
 *********************************************************************************	
 	
-    syntax varlist [if] [in], id(varname) time(varname) [FGNZ RD ort(string) ///
+    syntax varlist [if] [in], [dmu(varname) FGNZ RD ort(string) ///
 	                           GLOBAL SEQuential WINdow(numlist intege max=1 >=1) ///
 							   SAVing(string) maxiter(numlist integer >0 max=1) tol(numlist max=1 >0)]
 							   
@@ -31,7 +35,7 @@ program define malmq2,rclass
 	preserve
 	marksample touse 
     local opvars `varlist'
-	qui keep `invars' `opvars' `id' `time' `touse'
+	qui keep `invars' `opvars' `id' `time' `touse' `dmu'
 	qui gen Row=_n
 	label var Row "Row # in the original dataset"
 	
@@ -47,14 +51,14 @@ program define malmq2,rclass
 	if  "`fgnz'"==""&"`rd'"==""{
 	
 	    format `resvars' %9.4f
-		order Row `id' Pdwise  `resvars' 
-		keep if !missing(Pdwise) & `touse'
-		keep  Row `id' Pdwise  `resvars' 
+		order Row `dmu' `id' Pdwise  `resvars' 
+		qui keep if !missing(Pdwise) & `touse'
+		qui keep  Row `dmu' `id' Pdwise  `resvars' 
 	
 		disp _n(2) " Malmquist Productivity Index Results:"
 		disp "    (Row: Row # in the original data; Pdwise: periodwise)"
 
-		list Row `id'  Pdwise  `resvars', sep(0) 
+		list Row `dmu' `id'  Pdwise  `resvars', sep(0) 
 		di "Note: missing value indicates infeasible problem."
 
 		if `"`saving'"'!=""{
@@ -104,14 +108,14 @@ program define malmq2,rclass
 		
 		
 	    format `resvars' %9.4f
-		order Row `id' Pdwise  `resvars' 
-		keep if !missing(Pdwise) & `touse'
-		keep  Row `id' Pdwise  `resvars' 
+		order Row `dmu' `id' Pdwise  `resvars' 
+		qui keep if !missing(Pdwise) & `touse'
+		qui keep  Row `dmu' `id' Pdwise  `resvars' 
 	
 		disp _n(2) " Malmquist Productivity Index Results:"
 		disp "    (Row: Row # in the original data; Pdwise: periodwise)"
 
-		list Row `id'  Pdwise  `resvars' , sep(0) 
+		list Row `dmu' `id'  Pdwise  `resvars' , sep(0) 
 		di "Note: missing value indicates infeasible problem."
 
 		if `"`saving'"'!=""{

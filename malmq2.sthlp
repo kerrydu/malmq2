@@ -12,16 +12,13 @@
 
 {p 8 21 2}
 {cmd:malmq2} {it:{help varlist:inputvars}} {cmd:=} {it:{help varlist:outputvars}} {ifin} 
-{cmd:,} {cmdab:id(}{varname}{cmd:)} {cmdab:t:ime(}{varname}{cmd:)} [{it:options}]
+{cmd:,} [{it:options}]
 
 {synoptset 28 tabbed}{...}
 {synopthdr}
 {synoptline}
 {syntab:Main}
-{synopt:{cmdab:id(varname)}}specifies names of DMUs. It is required. 
-
-{synopt:{cmdab:t:ime:(varname)}}specifies time period for contemporaneous production technology. It is required. 
-{p_end}
+{synopt:{cmdab:dmu(varname)}}specifies names of DMUs. 
 
 {synopt:{cmdab:seq:uential}}specifies sequential production technology.
 {p_end}
@@ -32,10 +29,10 @@
 {synopt:{opt global}}specifies global production technology.
 {p_end}
 
-{synopt:{opt fgnz}}specifies decomposing TFP change using the FGNZ's (1994) method.
+{synopt:{opt fgnz}}specifies decomposing TFP change using Färe, Grosskopf, Norris, and Zhang's (1994) method.
 {p_end}
 
-{synopt:{opt rd}}specifies decomposing TFP change using the RD's (1997) method.
+{synopt:{opt rd}}specifies decomposing TFP change using Ray and Desli's (1997) method.
 {p_end}
 
 {synopt:{opt ort(string)}}specifies the oriention. The default is ort(i), 
@@ -52,7 +49,8 @@ meaning the input oriented productivity index. ort(out) means the output oriente
 {p_end}
 
 {synoptline}
-{p2colreset}{...}
+{p2colreset}{p 4 6 2}
+A panel variable and a time variable must be specified; use {helpb xtset}.
 
 
 {title:Description}
@@ -66,11 +64,13 @@ meaning the input oriented productivity index. ort(out) means the output oriente
 
 {phang}{"use ...\exdata.dta"}
 
-{phang}{cmd:. malmq2 K L= Y, id( dmu ) time(year) global}
+{phang}{cmd:. xtset dmu year}
 
-{phang}{cmd:. malmq2 K L= Y, id( dmu ) time(year) seq ort(o) fgnz}
+{phang}{cmd:. malmq2 K L= Y,  global}
 
-{phang}{cmd:. malmq2 K L= Y, id( dmu ) time(year) ort(o) rd sav(tfp_result,replace)}
+{phang}{cmd:. malmq2 K L= Y,  seq ort(o) fgnz}
+
+{phang}{cmd:. malmq2 K L= Y,  ort(o) rd sav(tfp_result,replace)}
 
 {title:Saved Results}
 
