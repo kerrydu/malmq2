@@ -62,7 +62,7 @@ A panel variable and a time variable must be specified; use {helpb xtset}.
 
 {title:Examples}
 
-{phang}{"use ...\exdata.dta"}
+{phang}{cmd:. use "https://raw.githubusercontent.com/kerrydu/malmq2/master/exdata.dta"}
 
 {phang}{cmd:. xtset dmu year}
 
