@@ -38,11 +38,12 @@ program define malmq2,rclass prop(xt)
 	qui keep `invars' `opvars' `id' `time' `touse' `dmu'
 	qui gen Row=_n
 	label var Row "Row # in the original dataset"
-	
+
+/*	
 	qui cap bys `id' (`time'): gen Pdwise=`time'[_n-1]+"~"+`time' if _n>1
 	qui cap bys `id' (`time'): gen Pdwise=string(`time'[_n-1])+"~"+string(`time') if _n>1
 	label var Pdwise "Period wise"
-	
+*/	
 	_malmq `invars'=`opvars' if `touse', id(`id') time(`time') ort(`ort') `global' `sequential' ///
 	                                     window(`window')  maxiter(`maxiter') tol(`tol')
 							   
@@ -52,6 +53,10 @@ program define malmq2,rclass prop(xt)
 	
 	    format `resvars' %9.4f
 		order Row `dmu' `id' Pdwise  `resvars' 
+		qui keep if `touse'
+		qui cap bys `id' (`time'): gen Pdwise=`time'[_n-1]+"~"+`time' if _n>1
+		qui cap bys `id' (`time'): gen Pdwise=string(`time'[_n-1])+"~"+string(`time') if _n>1
+		label var Pdwise "Period wise"
 		qui keep if !missing(Pdwise) & `touse'
 		qui keep  Row `dmu' `id' Pdwise  `resvars' 
 	
@@ -108,6 +113,12 @@ program define malmq2,rclass prop(xt)
 		
 		
 	    format `resvars' %9.4f
+
+		qui keep if `touse'
+		qui cap bys `id' (`time'): gen Pdwise=`time'[_n-1]+"~"+`time' if _n>1
+		qui cap bys `id' (`time'): gen Pdwise=string(`time'[_n-1])+"~"+string(`time') if _n>1
+		label var Pdwise "Period wise"
+			    
 		order Row `dmu' `id' Pdwise  `resvars' 
 		qui keep if !missing(Pdwise) & `touse'
 		qui keep  Row `dmu' `id' Pdwise  `resvars' 
