@@ -52,10 +52,11 @@ program define malmq2,rclass prop(xt)
 	if  "`fgnz'"==""&"`rd'"==""{
 	
 	    format `resvars' %9.4f
-		order Row `dmu' `id' Pdwise  `resvars' 
+
 		qui keep if `touse'
 		qui cap bys `id' (`time'): gen Pdwise=`time'[_n-1]+"~"+`time' if _n>1
 		qui cap bys `id' (`time'): gen Pdwise=string(`time'[_n-1])+"~"+string(`time') if _n>1
+		order Row `dmu' `id' Pdwise  `resvars' 
 		label var Pdwise "Period wise"
 		qui keep if !missing(Pdwise) & `touse'
 		qui keep  Row `dmu' `id' Pdwise  `resvars' 
