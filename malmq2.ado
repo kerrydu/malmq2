@@ -1,3 +1,5 @@
+*! version 2.2
+* add biennial technology
 *! version 2.1
 * Kerry Du (kerrydu@xmu.edu.cn)
 * 29 Nov 2019
@@ -24,7 +26,7 @@ program define malmq2,rclass prop(xt)
 *********************************************************************************	
 	
     syntax varlist [if] [in], [dmu(varname) FGNZ RD ort(string) ///
-	                           GLOBAL SEQuential WINdow(numlist intege max=1 >=1) ///
+	                          BIennial GLOBAL SEQuential WINdow(numlist intege max=1 >=1) ///
 							   SAVing(string) maxiter(numlist integer >0 max=1) tol(numlist max=1 >0)]
 							   
 							   
@@ -44,7 +46,7 @@ program define malmq2,rclass prop(xt)
 	qui cap bys `id' (`time'): gen Pdwise=string(`time'[_n-1])+"~"+string(`time') if _n>1
 	label var Pdwise "Period wise"
 */	
-	_malmq `invars'=`opvars' if `touse', id(`id') time(`time') ort(`ort') `global' `sequential' ///
+	qui _malmq `invars'=`opvars' if `touse', id(`id') time(`time') ort(`ort') `global' `sequential' ///
 	                                     window(`window')  maxiter(`maxiter') tol(`tol')
 							   
 	local resvars `r(rvars)'
@@ -87,7 +89,7 @@ program define malmq2,rclass prop(xt)
 		
 		}
 		
-	   _malmq `invars'=`opvars' if `touse', vrs id(`id') time(`time') ort(`ort') `global' `sequential' ///
+	  qui  _malmq `invars'=`opvars' if `touse', vrs id(`id') time(`time') ort(`ort') `biennial' `global' `sequential' ///
 	                                        window(`window')  maxiter(`maxiter') tol(`tol')		
 		
 		if "`rd'"!=""{
@@ -174,7 +176,7 @@ program define _malmq,rclass
 	
     local num: word count `invars'
     syntax varlist [if] [in], id(varname) time(varname) [VRS ort(string) ///
-	                           GLOBAL SEQuential WINdow(numlist intege max=1 >=1) ///
+	                         BIennial  GLOBAL SEQuential WINdow(numlist intege max=1 >=1) ///
 							   maxiter(numlist integer >0 max=1) tol(numlist max=1 >0)]
 							   
 	marksample touse 
@@ -198,7 +200,14 @@ program define _malmq,rclass
 		   disp as error "global and window() cannot be specified together."
 		   error 498	   
 	   
-	   }	   
+	   }	
+
+	   if "`biennial'"!=""{
+	   
+		   disp as error "global and biennial cannot be specified together."
+		   error 498	   
+	   
+	   }	      
 	   
 	   local techtype "global"
 	
@@ -214,6 +223,13 @@ program define _malmq,rclass
 		   error 498	   
 	   
 	   }	   
+
+	   if "`biennial'"!=""{
+	   
+		   disp as error "sequential and biennial cannot be specified together."
+		   error 498	   
+	   
+	   }		   
 	   
 	   local techtype "sequential"
 	
@@ -221,10 +237,28 @@ program define _malmq,rclass
 		
  
 	   if "`window'"!=""{
+
+		   if "`biennial'"!=""{
+		   
+			   disp as error "biennial and window() cannot be specified together."
+			   error 498	   
+		   
+		   }		   	
 	   
 	       local techtype "window"   
 	   
-	   }	   
+	   }
+
+
+		   if "`biennial'"!=""{
+		   
+				local techtype "biennial"     
+		   
+		   }		   	
+	   
+	       
+
+
 	   
 	if "`maxiter'"==""{
 		local maxiter=-1
@@ -344,6 +378,26 @@ program define _malmq,rclass
   
   }
  
+     if `"`techtype'"'=="biennial" {
+	 
+        forv t=1/`tmax'{
+            qui replace `flag'=(`period'<=`t'+1 & `period'>=`t') 
+            shepdf  if `period'==`t' & `touse', rflag(`flag') gen(`temp') `vrs' ort(`ort') in(`invars') op(`opvars') maxiter(`maxiter') tol(`tol')
+            qui replace `DD'=`temp' if `period'==`t'
+            qui cap drop `temp'
+        }    
+
+        forv t=2/`tmax'{
+            qui replace `flag'=(`period'<=`t' & `period'>=`t'-1) 
+            shepdf  if `period'==`t' & `touse', rflag(`flag') gen(`temp') `vrs' ort(`ort') in(`invars') op(`opvars') maxiter(`maxiter') tol(`tol')
+            qui replace `D12'=`temp' if `period'==`t'
+            qui cap drop `temp'
+        }       
+
+    
+  
+  }
+
 
  	
  
@@ -372,6 +426,28 @@ program define _malmq,rclass
 		local resvars TFPCH TECH  BPC
 		
 		
+	}
+	else if `"`techtype'"'=="biennial"{
+
+        qui bys `dmu' (`period'): gen TFPCH=`DD'/`D12' if _n>1
+		label var TFPCH "Total factor productivity change"
+		cap drop `temp'	
+
+		sort `period' `dmu'
+		forv t=1/`tmax'{
+			qui replace `flag'=(`period'==`t')
+			shepdf  if `touse' & `period'==`t', rflag(`flag') gen(`temp') `vrs' ort(`ort') in(`invars') op(`opvars') maxiter(`maxiter') tol(`tol')
+			qui replace `DD'=`temp' if `period'==`t'
+			qui cap drop `temp'
+		}
+
+		qui bys `dmu' (`period'): gen TECH=`DD'/`DD'[_n-1]	
+		qui bys `dmu' (`period'): gen TECCH=TFPCH/TECH			
+	
+		label var TECH  "Technical efficiency change"	
+		label var TECCH "Techological change"
+		local resvars TFPCH TECH  TECCH						
+
 	}
 	else{
 	

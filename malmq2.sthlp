@@ -26,6 +26,9 @@
 {synopt:{cmdab:win:dow(#)}}specifies window production technology with # periods.
 {p_end}
 
+{synopt:{cmdab:bi:ennial}}specifies biennial production technology. 
+{p_end}
+
 {synopt:{opt global}}specifies global production technology.
 {p_end}
 
@@ -100,7 +103,8 @@ Ji, Y., Lee, C. (2010). Data Envelopment Analysis. Stata Journal 10: 267-280.
 {phang}
 Lee, K., Lee,B., Lee, C., Lee, C. (2011). Malmquist Productivity Index using DEA frontier in Stata. Working paper.
 
-
+{phang}
+Jesús T. Pastor, Mette Asmild, C.A. Knox Lovell (2011). The biennial Malmquist productivity change index, Socio-Economic Planning, 45(1):10-15.
 
 {title:Author}
 
