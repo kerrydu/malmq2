@@ -1,5 +1,6 @@
 *! version 2.2
-* add biennial technology
+* 29 Apr 2020
+* add biennial option
 *! version 2.1
 * Kerry Du (kerrydu@xmu.edu.cn)
 * 29 Nov 2019
@@ -429,7 +430,7 @@ program define _malmq,rclass
 	}
 	else if `"`techtype'"'=="biennial"{
 
-        qui bys `dmu' (`period'): gen TFPCH=`DD'/`D12' if _n>1
+        qui bys `dmu' (`period'): gen TFPCH=`D12'/`DD'[_n-1] if _n>1
 		label var TFPCH "Total factor productivity change"
 		cap drop `temp'	
 
