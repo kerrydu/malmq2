@@ -4,8 +4,10 @@
 ## Requirement
  * Stata 16 or later version
  
-## Install with Stata Command
+## Installation
  
+ Download the files into your local directory
+
  ```
- net install malmq2, from("https://raw.githubusercontent.com/kerrydu/malmq2/master/")
+ net install malmq2, from(files_in_your_local_directory)
  ```
