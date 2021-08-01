@@ -7,7 +7,9 @@
 capture program drop malmq2
 program define malmq2,rclass prop(xt)
     version 16
-
+	_get_version malmq2
+	_compile_mata, package(malmq2) version(`package_version') verbose 
+	
 	_xt, trequired 
 	local id=r(ivar)
 	local time=r(tvar)
